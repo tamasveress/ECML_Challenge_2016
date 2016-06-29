@@ -1,0 +1,3 @@
+# ECML_Challenge_2016
+Solution for ECML/PKDD 2016 Discovery Challenge
+...
