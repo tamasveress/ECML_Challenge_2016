@@ -12,8 +12,8 @@ Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
 - Blended [submission file  ]
 
 [Credit Card Usage Challenge]: https://dms.sztaki.hu/ecml-pkkd-2016/#/app/home
-[training]: https://www.dropbox.com/s/11jh741kqe7o3hh/train_store.csv?dl=0
-[test]: https://www.dropbox.com/s/3j5uvknda42xmzq/test_store.csv?dl=0
-[submission file]: https://www.dropbox.com/s/k2qsn2l6cylkp2u/sub_branch_visit.csv?dl=0
-[submission file ]: https://www.dropbox.com/s/k2qsn2l6cylkp2u/sub_branch_visit.csv?dl=0
-[submission file  ]: https://www.dropbox.com/s/k2qsn2l6cylkp2u/sub_branch_visit.csv?dl=0
+[training]: https://db.tt/pwAqm05P
+[test]: https://db.tt/C5Eh8Xtd
+[submission file]: https://db.tt/yViA5MEw
+[submission file ]: https://db.tt/0VyKvCTI
+[submission file  ]: https://db.tt/mJYIMav4
