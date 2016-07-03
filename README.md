@@ -8,7 +8,7 @@ Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
 
 ## Task 2: Upselling prediction
 
-- Simple [Submission file ]
+- Simple [submission file ]
 - Blended [submission file  ]
 
 [Credit Card Usage Challenge]: https://dms.sztaki.hu/ecml-pkkd-2016/#/app/home
