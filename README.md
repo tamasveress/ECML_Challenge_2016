@@ -3,13 +3,13 @@ Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
 
 ## Task 1: Predict the bank branches visited by the user.
 
-..* Output of 1.1_Branch_Visits_Preprocessing: [training] and [test]
-..* Output of 1.2_Branch_Visits_Model: [submission file]
+..1 Output of 1.1_Branch_Visits_Preprocessing: [training] and [test]
+..2 Output of 1.2_Branch_Visits_Model: [submission file]
 
 ## Task 2: Upselling prediction
 
-..* Simple [Submission file ]
-..* Blended [submission file  ]
+..1 Simple [Submission file ]
+..2 Blended [submission file  ]
 
 [Credit Card Usage Challenge]: https://dms.sztaki.hu/ecml-pkkd-2016/#/app/home
 [training]: https://www.dropbox.com/s/11jh741kqe7o3hh/train_store.csv?dl=0
