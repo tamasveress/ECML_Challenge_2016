@@ -1,3 +1,5 @@
+# This part processes the test data and create the first version of submission with xgb_model from 2.1_Upselling_train 
+
 train_2015 <- read_csv("train_2015.csv")
 users_2015 <- read_csv("users_2015.csv")
 ##########################################
@@ -32,10 +34,6 @@ users$Have6<-users$C201506
 users$Had1to6<-users$C201501-users$C201506
 users$Had1to6[users$Had1to6==-1]<-0
 users[,c('C201501','C201502','C201503','C201504','C201505','C201506')]<- list(NULL)
-##########################################
-# Targets  ###############################
-##########################################
-
 ##################################################################################
 # Transaction features ###########################################################
 ##################################################################################
@@ -62,7 +60,7 @@ DF[is.na(DF)] <- 0
 users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
 users[is.na(users)] <- 0
 ##########################################
-# CARDS
+# CARDS          #########################
 ##########################################
 train <- transform(train, CARD_CAT = ifelse(CARD_CAT=='c', 1, 0))
 mean(train$CARD_CAT) #0.05325242 / 0.06369311 /0.0672246
