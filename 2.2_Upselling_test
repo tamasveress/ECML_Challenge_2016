@@ -30,9 +30,9 @@ users[,c('W201501','W201502','W201503','W201504','W201505','W201506')]<- list(NU
 # Have/had card feature   ################
 ##########################################
 users$Have1<-users$C201501
-users$Have6<-users$C201506
-users$Had1to6<-users$C201501-users$C201506
-users$Had1to6[users$Had1to6==-1]<-0
+users$Have<-users$C201506
+users$Had<-users$C201501-users$C201506
+users$Had[users$Had==-1]<-0
 users[,c('C201501','C201502','C201503','C201504','C201505','C201506')]<- list(NULL)
 ##################################################################################
 # Transaction features ###########################################################
@@ -88,10 +88,6 @@ users[is.na(users)] <- 0
 # ApplyH1 kill
 # write.table(users, "users15.csv",row.names=FALSE,sep=',')
 # users_2015<-read_csv("users15.csv")
-users$AMTab<-users$AMTa+users$AMTb
-#users$AMTb<-users$AMTb/users$AMT
-#users$AMTb[is.na(users$AMTb)]<-0
-
 
 test<-users[,c('USER_ID','GEN','Age1','Age2','Age3','CAP','VIL','INC','WH1','Have6','Had1to6','AMTab','AMTb','NetFreq','PosFreq','PosSD','CARDS')]
 ########
