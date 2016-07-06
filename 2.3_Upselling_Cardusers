@@ -1,0 +1,49 @@
+feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','NetFreq','PosFreq','PosSD','CLOSE','CARDS')
+target1<-setnames(data.frame(train1$Have),'Have')
+target2<-setnames(data.frame(train2$Have),'Have')
+feature.names.nohave<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','AMT','NetFreq','PosFreq','PosSD','CLOSE','CARDS')
+
+train_target<-target1
+train_eval <- train1[,feature.names.nohave]
+train_val <- train2[,feature.names.nohave]
+
+h <-sample(nrow(train_target),1000)
+dval   <-xgb.DMatrix(data=data.matrix(train_eval[h,]),label=train_target$Have[h])
+dtrain <-xgb.DMatrix(data=data.matrix(train_eval[-h,]),label=train_target$Have[-h])
+set.seed(3322)
+xgb_watchlist <-list(val=dval,train=dtrain)
+xgb_params <- list(  objective           = "binary:logistic",    # binary:logistic
+                     booster = "gbtree",
+                     eval_metric = "auc",
+                     eta                 = 0.05,                          # 0.04
+                     max_depth           = 6, #changed from default of 8   5-6???(7303)
+                     subsample           = 0.7,                           # 0.5 tune with col
+                     colsample_bytree    = 0.7                            # 0.5
+)
+xgb_model <- xgb.train(
+  params              = xgb_params, 
+  data                = dtrain, 
+  nrounds             = 206, # 89        nround last to tune
+  verbose             = 1,  #0 if full training set and no watchlist provided
+  watchlist           = xgb_watchlist,
+  print.every.n       = 10,
+  maximize            = FALSE
+)
+#modelcv = xgb.cv(params = xgb_params, nrounds = 600, nfold = 3, data = dtrain, early.stop.round = 20, nthread = 12, print.every.n = 50 )
+IMP_all<-as.data.frame(xgb.importance(feature_names = feature.names.nohave, model = xgb_model))
+write_csv(IMP_all, "IMP_all_mod_Have.csv")
+
+
+predictions <- predict(xgb_model, data.matrix(train_val))
+cor(target2$Have,predictions)  #.../0.08999682
+auc(target2$Have,predictions)
+
+pred  <- data.frame(SCORE=round(predictions,digits = 6),target2$Have)
+write_csv(pred, "train2pred2.csv")
+
+########## save model  ##########################################
+xgb_have<-xgb_model  ##########################################
+## predict test
+test<- test[,feature.names.nohave]
+predictions <- predict(xgb_have, data.matrix(test))
+write_csv(data.frame(predictions), "testpred2.csv")
