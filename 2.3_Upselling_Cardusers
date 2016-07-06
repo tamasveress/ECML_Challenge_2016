@@ -1,3 +1,7 @@
+#users14
+#users15
+# INC less imp
+
 feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','NetFreq','PosFreq','PosSD','CLOSE','CARDS')
 target1<-setnames(data.frame(train1$Have),'Have')
 target2<-setnames(data.frame(train2$Have),'Have')
@@ -29,21 +33,7 @@ xgb_model <- xgb.train(
   print.every.n       = 10,
   maximize            = FALSE
 )
-#modelcv = xgb.cv(params = xgb_params, nrounds = 600, nfold = 3, data = dtrain, early.stop.round = 20, nthread = 12, print.every.n = 50 )
-IMP_all<-as.data.frame(xgb.importance(feature_names = feature.names.nohave, model = xgb_model))
-write_csv(IMP_all, "IMP_all_mod_Have.csv")
 
-
-predictions <- predict(xgb_model, data.matrix(train_val))
-cor(target2$Have,predictions)  #.../0.08999682
-auc(target2$Have,predictions)
-
-pred  <- data.frame(SCORE=round(predictions,digits = 6),target2$Have)
-write_csv(pred, "train2pred2.csv")
-
-########## save model  ##########################################
-xgb_have<-xgb_model  ##########################################
-## predict test
 test<- test[,feature.names.nohave]
-predictions <- predict(xgb_have, data.matrix(test))
+predictions <- predict(xgb_model, data.matrix(test))
 write_csv(data.frame(predictions), "testpred2.csv")
