@@ -1,1 +1,203 @@
+# This part processes the training data and run the first version of the xgb model
+
+##########################################
+# Load packages and input files ##########
+##########################################
+setwd("D:\\ECMLupsell")
+library(readr)
+library(xgboost)
+library(pROC)
+banks <- read_csv("bank_info.csv")
+train_2014 <- read_csv("train_2014.csv")
+users_2014 <- read_csv("users_2014.csv")
+users_2015 <- read_csv("users_2015.csv")
+##########################################
+# Swap categorical features ##############
+##########################################
+users<-users_2014
+users <- transform(users, Age1 = ifelse(AGE_CAT =='a', 1, 0))
+users <- transform(users, Age2 = ifelse(AGE_CAT =='b', 1, 0))
+users <- transform(users, Age3 = ifelse(AGE_CAT =='c', 1, 0))
+users$AGE_CAT<-NULL
+users <- transform(users, CAP = ifelse(LOC_CAT =='a', 1, 0))
+users <- transform(users, CIT = ifelse(LOC_CAT =='b', 1, 0))
+users <- transform(users, VIL = ifelse(LOC_CAT =='c', 1, 0))
+users$LOC_CAT<-NULL
+users <- transform(users, INC = ifelse(INC_CAT =='d', 0, ifelse(INC_CAT =='a', 1, ifelse(INC_CAT =='b', 2, 3))))
+users <- transform(users, INC0 = ifelse(INC_CAT =='d', 1, 0))
+users <- transform(users, INC1 = ifelse(INC_CAT =='a', 1, 0))
+users <- transform(users, INC2 = ifelse(INC_CAT =='b', 1, 0))
+users <- transform(users, INC3 = ifelse(INC_CAT =='c', 1, 0))
+users$INC_CAT<-NULL
+##########################################
+# Wealth feature   #######################
+##########################################
+users$WH1<-apply(users[,18:23], 1, max) 
+users$WH2<-apply(users[,24:29], 1, max)
+users$WY<-apply(users[,c('WH1','WH2')],2,max)
+users[,c('W201401','W201402','W201403','W201404','W201405','W201406','W201407','W201408','W201409','W201410','W201411','W201412')]<- list(NULL)
+##########################################
+# Have/had card feature   ################
+##########################################
+users$Have1<-users$C201401
+users$Have6<-users$C201406
+users$Have12<-users$C201412
+users$Had1to6<-users$C201401-users$C201406
+users$Had1to6[users$Had1to6==-1]<-0
+users$Had7to12<-users$C201407-users$C201412
+users$Had7to12[users$Had7to12==-1]<-0
+users[,c('C201401','C201402','C201403','C201404','C201405','C201406','C201407','C201408','C201409','C201410','C201411','C201412')]<- list(NULL)
+##########################################
+# Targets  ###############################
+##########################################
+users$APPLY <- as.numeric(substr(users$TARGET_TASK_2,1,4))+as.numeric(substr(users$TARGET_TASK_2,6,7))/100
+users$APPLY[is.na(users$APPLY)] <- 0
+users <- transform(users, ApplyH1 = ifelse(APPLY>2014 & APPLY<2014.07, 1, 0))
+users <- transform(users, ApplyH2 = ifelse(APPLY>2014.06 & APPLY<2015, 1, 0))
+users <- transform(users, ApplyH3 = ifelse(APPLY>2015 & APPLY<2015.07, 1, 0))
+users <- transform(users, ApplyH4 = ifelse(APPLY>2015.06 & APPLY<2016, 1, 0))
+users <- transform(users, ApplyY2 = ifelse(APPLY>2015 & APPLY<2016, 1, 0))
+users$APPLY <-NULL
+##########################################
+# Transaction features ###################
+##########################################
+# Fill NAs
+train <- train_2014
+train <- transform(train, CHANNEL_Net = ifelse(CHANNEL=='n', 1, 0))
+train <- transform(train, CHANNEL_Pos = ifelse(CHANNEL=='p', 1, 0))
+train <- transform(train, CHANNEL_Br = ifelse(CHANNEL=='b', 1, 0))
+#
+train <- transform(train, AMT = ifelse(AMT_CAT=='a', 1, ifelse(AMT_CAT=='b', 10, 100)))
+train <- transform(train, AMTsmall = ifelse(AMT_CAT=='a', 1, ifelse(AMT_CAT=='b', 10, 0)))
+train <- transform(train, AMTa = ifelse(MC_CAT=='a', AMT, 0))
+train <- transform(train, AMTb = ifelse(MC_CAT=='b', AMT, 0))
+# Filter period
+train1<-train[month(train$DATE)<7,]
+train2<-train[month(train$DATE)>6,]
+##########################################
+# Spending amount and frequency  #########
+##########################################
+train<-train1
+DF <- setNames(aggregate(list(train$AMT,train$AMTsmall,train$AMTa,train$AMTb,train$CHANNEL_Net,train$CHANNEL_Pos,train$CHANNEL_Br), list(train$USER_ID),sum), c('USER_ID','AMTH1','AMTsmallH1','AMTaH1','AMTbH1','NetFreqH1','PosFreqH1','BrFreqH1'))
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+users[is.na(users)] <- 0
+# Pos Std
+DF<-train[train$CHANNEL_Pos==1 & train$GEO_X>0,]
+DF <- setNames(aggregate(list(train$GEO_X), list(train$USER_ID),sd), c('USER_ID','PosSD1'))
+DF[is.na(DF)] <- 0
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+users[is.na(users)] <- 0
+
+train<-train2
+DF <- setNames(aggregate(list(train$AMT,train$AMTsmall,train$AMTa,train$AMTb,train$CHANNEL_Net,train$CHANNEL_Pos,train$CHANNEL_Br), list(train$USER_ID),sum), c('USER_ID','AMTH2','AMTsmallH2','AMTaH2','AMTbH2','NetFreqH2','PosFreqH2','BrFreqH2'))
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+users[is.na(users)] <- 0
+# Pos Std
+DF<-train[train$CHANNEL_Pos==1 & train$GEO_X>0,]
+DF <- setNames(aggregate(list(train$GEO_X), list(train$USER_ID),sd), c('USER_ID','PosSD2'))
+DF[is.na(DF)] <- 0
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+users[is.na(users)] <- 0
+
+##########################################
+# CARDS feature: giving larger weights for shopping at places where credit cards are used more often
+##########################################
+# for 2nd trainset
+train<-train_2014[month(train_2014$DATE)<7,]
+train <- transform(train, CARD_CAT = ifelse(CARD_CAT=='c', 1, 0))
+mean(train$CARD_CAT) #0.05325242 / 0.06369311 /0.0672246
+DF<-setNames(aggregate(list(train$CARD_CAT), list(train$POI_ID),mean), c('POI_ID','CARDS'))
+CARDSvsPOI<-DF
+#write_csv(CARDSvsPOI, "CARDSvsPOI.csv")
+DF<-merge(x=train,y=CARDSvsPOI,by='POI_ID',all.x=TRUE)
+DF<-setNames(aggregate(list(DF$CARDS), list(DF$USER_ID),sum), c('USER_ID','CARDS'))
+#write_csv(DF, "CARDSvsUSER.csv")
+DF<-merge(x=users,y=DF,by='USER_ID',all.x=TRUE)
+DF$CARDS[is.na(DF$CARDS)] <- 0
+users$CARDS1<-DF$CARDS
+#########
+train<-train_2014[month(train_2014$DATE)>6,]
+# C=1, D=0
+train <- transform(train, CARD_CAT = ifelse(CARD_CAT=='c', 1, 0))
+mean(train$CARD_CAT) #0.05325242 / 0.06369311 /0.0672246
+DF<-setNames(aggregate(list(train$CARD_CAT), list(train$POI_ID),mean), c('POI_ID','CARDS'))
+CARDSvsPOI<-DF
+#write_csv(CARDSvsPOI, "CARDSvsPOI.csv")
+DF<-merge(x=train,y=CARDSvsPOI,by='POI_ID',all.x=TRUE)
+DF<-setNames(aggregate(list(DF$CARDS), list(DF$USER_ID),sum), c('USER_ID','CARDS'))
+#write_csv(DF, "CARDSvsUSER.csv")
+DF<-merge(x=users,y=DF,by='USER_ID',all.x=TRUE)
+DF$CARDS[is.na(DF$CARDS)] <- 0
+users$CARDS2<-DF$CARDS
+
+##########################################
+# frequency at Airport
+train<-train_2014[month(train_2014$DATE)<7,]
+DF<-train[,c('USER_ID','GEO_X','GEO_Y')]
+DF<-DF[DF$GEO_X>0,]
+DF$Xbase<-653409
+DF$Ybase<-237084
+DF$Dist<-(DF$GEO_X-DF$Xbase)*(DF$GEO_X-DF$Xbase)+(DF$GEO_Y-DF$Ybase)*(DF$GEO_Y-DF$Ybase)
+DF<-transform(DF, CLOSE = ifelse(Dist<3000, 1, 0))
+DF <- setNames(aggregate(list(DF$CLOSE), list(DF$USER_ID),sum), c('USER_ID','CLOSEH1'))   #naming
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+# for 1st trainset
+train<-train_2014[month(train_2014$DATE)>6,]
+DF<-train[,c('USER_ID','GEO_X','GEO_Y')]
+DF<-DF[DF$GEO_X>0,]
+DF$Xbase<-653409
+DF$Ybase<-237084
+DF$Dist<-(DF$GEO_X-DF$Xbase)*(DF$GEO_X-DF$Xbase)+(DF$GEO_Y-DF$Ybase)*(DF$GEO_Y-DF$Ybase)
+DF<-transform(DF, CLOSE = ifelse(Dist<3000, 1, 0))
+DF <- setNames(aggregate(list(DF$CLOSE), list(DF$USER_ID),sum), c('USER_ID','CLOSEH2'))   #naming
+users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
+users[is.na(users)] <- 0
+
+##########################################
+# Building the model #####################
+##########################################
+#add CLOSE.....
+feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','AMTb','NetFreq','PosFreq','CLOSE') 
+train1<-users[,c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH1','Have6','Had1to6','AMTH1','AMTbH1','NetFreqH1','PosFreqH1','CLOSEH1')]
+train1<-setNames(train1,feature.names)
+train1_target<-data.frame(users[,c('ApplyH2')])
+colnames(train1_target)[1]<-'target'
+
+# train2 for local CV
+train2<-users[,c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH2','Have12','Had7to12','AMTH2','AMTbH2','NetFreqH2','PosFreqH2','CLOSEH2')]
+train2<-setNames(train2,feature.names)
+train2_target<-data.frame(users[,c('ApplyH3')])
+colnames(train2_target)[1]<-'target'
+train_users<-users$USER_ID
+
+# model training
+train_target <- train1_target
+train_eval   <- train1
+#feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','NetFreq','PosFreq','PosSD','CLOSE','CARDS')
+#train_eval <- train1[,feature.names]
+
+## Making a small validation set to analyze progress
+h <-sample(nrow(train_target),1000)
+dval   <-xgb.DMatrix(data=data.matrix(train_eval[h,]),label=train_target$target[h])
+dtrain <-xgb.DMatrix(data=data.matrix(train_eval[-h,]),label=train_target$target[-h])
+cat("start training a model \n")
+set.seed(3322)
+xgb_watchlist <-list(val=dval,train=dtrain)
+xgb_params <- list(  objective           = "binary:logistic",  
+                     booster = "gbtree",
+                     eval_metric = "auc",
+                     eta                 = 0.05,  
+                     max_depth           = 5,  
+                     subsample           = 0.55,     
+                     colsample_bytree    = 0.55    
+)
+xgb_model <- xgb.train(
+  params              = xgb_params, 
+  data                = dtrain, 
+  nrounds             = 300,
+  verbose             = 1,  #0 if full training set and no watchlist provided
+  watchlist           = xgb_watchlist,
+  print.every.n       = 10,
+  maximize            = FALSE
+)
 
