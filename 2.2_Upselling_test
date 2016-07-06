@@ -23,8 +23,8 @@ users$INC_CAT<-NULL
 ##########################################
 # Wealth feature   #######################
 ##########################################
-users$WH1<-apply(users[,11:16], 1, max)
-users$WY<-users$WH1
+users$WH<-apply(users[,11:16], 1, max)
+users$WY<-users$WH   
 users[,c('W201501','W201502','W201503','W201504','W201505','W201506')]<- list(NULL)
 ##########################################
 # Have/had card feature   ################
@@ -89,15 +89,15 @@ users[is.na(users)] <- 0
 # write.table(users, "users15.csv",row.names=FALSE,sep=',')
 # users_2015<-read_csv("users15.csv")
 
-test<-users[,c('USER_ID','GEN','Age1','Age2','Age3','CAP','VIL','INC','WH1','Have6','Had1to6','AMTab','AMTb','NetFreq','PosFreq','PosSD','CARDS')]
+test<-users[,c('USER_ID','GEN','Age1','Age2','Age3','CAP','VIL','INC','WH','Have','Had','AMT','AMTb','NetFreq','PosFreq','CLOSE')]
 ########
-test<-setnames(test,c('USER_ID','GEN','Age1','Age2','Age3','CAP','VIL','INC','WH','Have','Had','AMT','AMTb','NetFreq','PosFreq','PosSD','CARDS'))
+#test<-setnames(test,c('USER_ID','GEN','Age1','Age2','Age3','CAP','VIL','INC','WH','Have','Had','AMT','AMTb','NetFreq','PosFreq','PosSD','CARDS'))
 
 #testsub<-users_2015[,c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH1','Have6','Had1to6','AMT','NetFreq','PosFreq','BrFreq','PosSD','CARDS')]
 #.....
 predictions <- predict(xgb_model, data.matrix(test[,feature.names]))
 submission  <- data.frame(USER_ID=test$USER_ID,SCORE=round(predictions,digits = 6))
-write_csv(submission, "mod_16fnoclose_220.csv")
+write_csv(submission, "sub_1.csv")
 
 
 # Haveseknek 0???-= 0.0015 worse
