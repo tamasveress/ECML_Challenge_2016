@@ -66,7 +66,7 @@ train <- train_2014
 train <- transform(train, CHANNEL_Net = ifelse(CHANNEL=='n', 1, 0))
 train <- transform(train, CHANNEL_Pos = ifelse(CHANNEL=='p', 1, 0))
 train <- transform(train, CHANNEL_Br = ifelse(CHANNEL=='b', 1, 0))
-#
+
 train <- transform(train, AMT = ifelse(AMT_CAT=='a', 1, ifelse(AMT_CAT=='b', 10, 100)))
 train <- transform(train, AMTsmall = ifelse(AMT_CAT=='a', 1, ifelse(AMT_CAT=='b', 10, 0)))
 train <- transform(train, AMTa = ifelse(MC_CAT=='a', AMT, 0))
@@ -81,7 +81,7 @@ train<-train1
 DF <- setNames(aggregate(list(train$AMT,train$AMTsmall,train$AMTa,train$AMTb,train$CHANNEL_Net,train$CHANNEL_Pos,train$CHANNEL_Br), list(train$USER_ID),sum), c('USER_ID','AMTH1','AMTsmallH1','AMTaH1','AMTbH1','NetFreqH1','PosFreqH1','BrFreqH1'))
 users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
 users[is.na(users)] <- 0
-# Pos Std
+# Stdev of pos geo x as mobility feature
 DF<-train[train$CHANNEL_Pos==1 & train$GEO_X>0,]
 DF <- setNames(aggregate(list(train$GEO_X), list(train$USER_ID),sd), c('USER_ID','PosSD1'))
 DF[is.na(DF)] <- 0
@@ -108,30 +108,25 @@ train <- transform(train, CARD_CAT = ifelse(CARD_CAT=='c', 1, 0))
 mean(train$CARD_CAT) #0.05325242 / 0.06369311 /0.0672246
 DF<-setNames(aggregate(list(train$CARD_CAT), list(train$POI_ID),mean), c('POI_ID','CARDS'))
 CARDSvsPOI<-DF
-#write_csv(CARDSvsPOI, "CARDSvsPOI.csv")
 DF<-merge(x=train,y=CARDSvsPOI,by='POI_ID',all.x=TRUE)
 DF<-setNames(aggregate(list(DF$CARDS), list(DF$USER_ID),sum), c('USER_ID','CARDS'))
-#write_csv(DF, "CARDSvsUSER.csv")
 DF<-merge(x=users,y=DF,by='USER_ID',all.x=TRUE)
 DF$CARDS[is.na(DF$CARDS)] <- 0
 users$CARDS1<-DF$CARDS
 #########
 train<-train_2014[month(train_2014$DATE)>6,]
-# C=1, D=0
 train <- transform(train, CARD_CAT = ifelse(CARD_CAT=='c', 1, 0))
 mean(train$CARD_CAT) #0.05325242 / 0.06369311 /0.0672246
 DF<-setNames(aggregate(list(train$CARD_CAT), list(train$POI_ID),mean), c('POI_ID','CARDS'))
 CARDSvsPOI<-DF
-#write_csv(CARDSvsPOI, "CARDSvsPOI.csv")
 DF<-merge(x=train,y=CARDSvsPOI,by='POI_ID',all.x=TRUE)
 DF<-setNames(aggregate(list(DF$CARDS), list(DF$USER_ID),sum), c('USER_ID','CARDS'))
-#write_csv(DF, "CARDSvsUSER.csv")
 DF<-merge(x=users,y=DF,by='USER_ID',all.x=TRUE)
 DF$CARDS[is.na(DF$CARDS)] <- 0
 users$CARDS2<-DF$CARDS
 
 ##########################################
-# frequency at Airport
+# Frequency at Airport
 train<-train_2014[month(train_2014$DATE)<7,]
 DF<-train[,c('USER_ID','GEO_X','GEO_Y')]
 DF<-DF[DF$GEO_X>0,]
@@ -153,10 +148,11 @@ DF <- setNames(aggregate(list(DF$CLOSE), list(DF$USER_ID),sum), c('USER_ID','CLO
 users<-merge(users,DF,by='USER_ID',all.x = TRUE,suffixes = c("",""))
 users[is.na(users)] <- 0
 
+#write.table(users, "users14_timesplit.csv",row.names=FALSE,sep=',')
+
 ##########################################
 # Building the model #####################
 ##########################################
-#add CLOSE.....
 feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','AMTb','NetFreq','PosFreq','CLOSE') 
 train1<-users[,c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH1','Have6','Had1to6','AMTH1','AMTbH1','NetFreqH1','PosFreqH1','CLOSEH1')]
 train1<-setNames(train1,feature.names)
@@ -170,7 +166,7 @@ train2_target<-data.frame(users[,c('ApplyH3')])
 colnames(train2_target)[1]<-'target'
 train_users<-users$USER_ID
 
-# model training
+# Model training
 train_target <- train1_target
 train_eval   <- train1
 #feature.names<-c('GEN','Age1','Age2','Age3','CAP','CIT','VIL','INC','WH','Have','Had','AMT','NetFreq','PosFreq','PosSD','CLOSE','CARDS')
