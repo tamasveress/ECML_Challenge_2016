@@ -95,8 +95,3 @@ predictions <- predict(xgb_model, data.matrix(test[,feature.names]))
 submission  <- data.frame(USER_ID=test$USER_ID,SCORE=round(predictions,digits = 6))
 write_csv(submission, "sub_1.csv")
 
-
-# Haveseknek 0???-= 0.0015 worse
-
-
-
