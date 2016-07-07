@@ -8,7 +8,8 @@ Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
 
 ## Task 2: Upselling prediction
 
-- Simple xgb [submission file ]
+- Output of 2.1_Upselling_train: [users14_timesplit] and [users14]
+- Output of 2.1_Upselling_train: [users15] and first xgb [submission file ]
 - Blended [submission file  ]
 
 [Credit Card Usage Challenge]: https://dms.sztaki.hu/ecml-pkkd-2016/#/app/home
@@ -17,3 +18,6 @@ Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
 [submission file]: https://db.tt/yViA5MEw
 [submission file ]: https://db.tt/0VyKvCTI
 [submission file  ]: https://db.tt/mJYIMav4
+[users14]: https://db.tt/RIzc1BHy
+[users14_timesplit]: https://db.tt/0mB3fQKi
+[users15]: https://db.tt/Fz9bbp1C
