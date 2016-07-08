@@ -1,5 +1,6 @@
 # ECML Challenge 2016
 Solutions for ECML/PKDD 2016 Discovery [Credit Card Usage Challenge]
+Codes are not optimised and cleaned but partial results are shared to support reproduction
 
 ## Task 1: Predict the bank branches visited by the user.
 
