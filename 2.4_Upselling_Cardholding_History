@@ -40,6 +40,7 @@ test_features<-test[,feature.names]
 predictions <- predict(xgb_model, data.matrix(test_features))
 
 # watch cluster stats
+test$PRED<-predictions
 sum(test$PRED)
 sum(test$PRED[test$JustHave==1])
 sum(test$PRED[test$LongHave==1]) 
