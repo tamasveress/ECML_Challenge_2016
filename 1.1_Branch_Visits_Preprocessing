@@ -199,7 +199,7 @@ test_store<-merge(x=test_store,y=users,by='USER_ID',all.x = TRUE)
 test_store$LOC_ID<-1000*round(test_store$LOC_GEO_X/1000,0)+round(test_store$LOC_GEO_Y/1000,0)
 
 ###############
-# Write store file ?????????column order
+# Write store file
 # "USER_ID","POI_ID","PDIST","PDISTrank","HDIST","HDISTrank","Hcross","Pcross",
 # "GEN","LOC_GEO_X","LOC_GEO_Y","Age1","Age2","Age3","CAP","CIT","VIL","INC","INC0","INC1","INC2","INC3","WH","Have" 
 write.table(test_store,file="test_store.csv",row.names=F,sep=",")
