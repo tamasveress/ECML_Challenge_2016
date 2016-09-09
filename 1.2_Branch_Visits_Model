@@ -116,7 +116,6 @@ colnames(excess_visit)[1]<-'POI_ID'
 train2<-merge(x=train2,y=excess_visit,by='POI_ID',all.x=TRUE)
 
 ###### 1st xgb on train2
-
 train<-train2
 #feature.names<-c('PDIST','PDISTrank','HDIST','HDISTrank','Hcross','Pcross','Age1','Age3','CAP','CIT','VIL','GEN','INC','Have','WH')
 train_features<-train[,feature.names]
@@ -249,7 +248,7 @@ xgb2_params <- list(  objective           = "binary:logistic",
 xgb2_model <- xgb.train(
   params              = xgb2_params, 
   data                = dtrain, 
-  nrounds             = 300, 
+  nrounds             = 300,   #500
   verbose             = 1, 
   watchlist           = xgb_watchlist,
   print.every.n       = 50,
@@ -257,15 +256,14 @@ xgb2_model <- xgb.train(
 )
 # modelcv = xgb.cv(params = xgb2_params, nrounds = 500, nfold = 3, data = dtrain, early.stop.round = 20,  print.every.n = round(500)/10 )
 # IMP_all_xgb2<-as.data.frame(xgb.importance(feature_names = feature.names, model = xgb2_model))
+# xgb.plot.importance(IMP_all_xgb2)
 predictions <- predict(xgb2_model, data.matrix(train_features))
 cor(predictions,train$TARGET)  #0.7294268
-#DF1<-setnames(data.frame(train$USER_ID,train$POI_ID,predictions,train$TARGET),c('USER_ID','POI_ID','NUMBER_OF_VISITS','TARGET'))
-#DF<-DF1[DF1$USER_ID %in% DFozd$USER_ID, ]
 
 dtest<-test_xgb[,feature.names]
 dtest$HDIST<-as.numeric(dtest$HDIST)
 predictions <- predict(xgb2_model, data.matrix(dtest))
-cor(predictions,test_xgb$NUMBER_OF_VISITS) #400-
+cor(predictions,test_xgb$TARGET)
 
 ####### submit gen
 sub<-setnames(data.frame(test_xgb$USER_ID,test_xgb$POI_ID,predictions),c('USER_ID','POI_ID','NUMBER_OF_VISITS'))
@@ -273,14 +271,3 @@ sub$NUMBER_OF_VISITS<-round(sub$NUMBER_OF_VISITS,4)
 sub$RANK<-ave(sub$NUMBER_OF_VISITS, c(sub$USER_ID), FUN = function(x) rank(-x, ties.method = "first"))
 sub<-sub[sub$RANK<6,]
 write.table(sub, "sub_xgbblend_wFREQfin.csv",row.names=FALSE,sep=',')
-
-#fin2=INC added + 300->450
-
-#save.image('ECMLbl.Rdata')
-#load('ECMLblend.Rdata')
-
-# trand mit ad hozza a 400ashoz? -> 
-
-importance_matrix <- xgb.importance(model = xgb2_model)
-print(importance_matrix)
-xgb.plot.importance(importance_matrix)
